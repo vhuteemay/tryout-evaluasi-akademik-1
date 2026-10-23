@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT Tryout PPPK - Evaluasi Akademik (HOTS)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-active { display: flex !important; animation: modalFade 0.2s ease-out; }
+        @keyframes modalFade { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(4px); } }
+        
+        /* Custom Radio Button Styling */
+        input[type="radio"]:checked + div { border-color: #4f46e5; background-color: #eef2ff; }
+        input[type="radio"]:checked + div .radio-dot { background-color: #4f46e5; border-color: #4f46e5; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col relative">
+
+    <!-- App Container (SPA) -->
+    <div id="app" class="flex-1 flex flex-col w-full h-full"></div>
+
+    <!-- Custom Modal System -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 items-center justify-center backdrop-blur-sm px-4">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl">
+            <div class="flex items-center gap-3 mb-4">
+                <div id="modal-icon" class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"></div>
+                <h3 id="modal-title" class="text-lg font-bold text-slate-900">Konfirmasi</h3>
+            </div>
+            <p id="modal-message" class="text-slate-600 text-sm mb-8 leading-relaxed">Pesan konfirmasi</p>
+            <div id="modal-actions" class="flex justify-end gap-3 flex-wrap"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. DATABASE SOAL HOTS (40 SOAL UNIK C4-C6)
+        // ==========================================
+        const generateQuestions = () => [
+            {
+                        "q": "Sebuah unit pelayanan menerima keluhan karena petugas sering meminta pemohon datang di luar jam layanan untuk menyelesaikan berkas. Petugas beralasan hal itu dilakukan agar pekerjaan lebih cepat. Jika Anda adalah PPPK dalam tim tersebut, tindakan paling tepat untuk menjaga keseimbangan hak dan kewajiban adalah …",
+                        "o": [
+                                    "Membiarkan praktik tersebut karena tujuannya mempercepat pelayanan.",
+                                    "Mengikuti kebiasaan petugas senior agar hubungan kerja tetap harmonis.",
+                                    "Mengidentifikasi dampaknya terhadap hak masyarakat, mengingatkan kewajiban pelayanan sesuai ketentuan, lalu mengusulkan perbaikan alur layanan kepada atasan.",
+                                    "Menyampaikan keluhan masyarakat ke media sosial agar pimpinan segera bertindak.",
+                                    "Menghentikan seluruh pelayanan sampai pimpinan membuat SOP baru."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Menganalisis konflik antara kebiasaan internal dan kewajiban pelayanan. Hak masyarakat atas pelayanan yang semestinya harus diimbangi dengan kewajiban PPPK untuk bekerja sesuai ketentuan."
+            },
+            {
+                        "q": "Anda memperoleh kesempatan mengikuti pengembangan kompetensi yang relevan dengan jabatan. Pada saat yang sama, unit sedang kekurangan pegawai sehingga atasan meminta Anda membatalkan kegiatan tersebut. Strategi paling tepat adalah …",
+                        "o": [
+                                    "Menolak perintah atasan dan tetap pergi tanpa koordinasi.",
+                                    "Membatalkan seluruhnya karena kebutuhan unit selalu lebih penting.",
+                                    "Mendiskusikan dampak kegiatan terhadap pekerjaan, menyiapkan pengaturan tugas pengganti, dan mencari waktu atau skema yang memungkinkan hak pengembangan kompetensi tetap terlaksana.",
+                                    "Meminta rekan menggantikan seluruh pekerjaan tanpa serah terima.",
+                                    "Mengikuti kegiatan secara diam-diam agar hak tetap terpenuhi."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Mengevaluasi dua kepentingan yang sama-sama sah lalu memilih solusi yang menjaga hak pengembangan kompetensi sekaligus keberlangsungan pekerjaan."
+            },
+            {
+                        "q": "Seorang PPPK berpendapat bahwa karena ia memiliki hak atas perlindungan dalam menjalankan tugas, semua data pribadi masyarakat yang diterimanya boleh dibagikan kepada rekan kerja. Penilaian paling tepat adalah …",
+                        "o": [
+                                    "Benar, karena perlindungan pegawai berarti bebas menggunakan data pekerjaan.",
+                                    "Benar jika data dibagikan kepada rekan yang dipercaya.",
+                                    "Kurang tepat, karena hak perlindungan tidak menghapus kewajiban menjaga kerahasiaan dan menggunakan data sesuai kepentingan tugas.",
+                                    "Benar selama data tidak dipublikasikan di media sosial.",
+                                    "Tidak dapat dinilai karena hak dan kewajiban merupakan dua hal terpisah."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Hak dan kewajiban saling melengkapi. Perlindungan terhadap pegawai tidak menjadi alasan untuk mengabaikan kewajiban menjaga informasi yang diperoleh dalam pelaksanaan tugas."
+            },
+            {
+                        "q": "Dalam evaluasi pelayanan, masyarakat menilai petugas ramah tetapi banyak permohonan terlambat selesai. Sebagian petugas meminta agar indikator keramahan saja yang digunakan. Kesimpulan paling kuat adalah …",
+                        "o": [
+                                    "Keramahan sudah cukup karena masyarakat menyukai petugas yang sopan.",
+                                    "Ketepatan waktu tidak penting selama petugas tidak melakukan pelanggaran.",
+                                    "Kualitas pelayanan perlu dilihat secara utuh: perilaku profesional harus berjalan bersama pemenuhan kewajiban dan hasil layanan sesuai standar.",
+                                    "Indikator pelayanan sebaiknya hanya mengikuti penilaian petugas.",
+                                    "Keterlambatan dapat diabaikan jika jumlah pemohon sangat banyak."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Mengevaluasi hubungan antara hak masyarakat memperoleh layanan dan kewajiban PPPK menghasilkan pelayanan yang berkualitas, bukan sekadar bersikap ramah."
+            },
+            {
+                        "q": "Atasan menawarkan penghargaan internal karena capaian kerja Anda tinggi, tetapi meminta sebagian penghargaan diberikan kepada pegawai lain yang tidak terlibat. Tindakan profesional adalah …",
+                        "o": [
+                                    "Menerima dan membagi penghargaan secara informal.",
+                                    "Menolak penghargaan agar tidak menyinggung pegawai lain.",
+                                    "Mengklarifikasi dasar pemberian penghargaan dan memastikan penghargaan diberikan sesuai kontribusi serta mekanisme yang berlaku.",
+                                    "Menerima lalu menyembunyikan informasi dari rekan kerja.",
+                                    "Meminta atasan mengganti penghargaan dengan uang pribadi."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Penghargaan perlu dikelola secara objektif. Klarifikasi mekanisme dan dasar kontribusi lebih profesional daripada membagi penghargaan secara informal."
+            },
+            {
+                        "q": "Sebuah instansi mengalami banyak keluhan setelah menempatkan PPPK pada pekerjaan yang tidak sesuai kompetensinya. Pimpinan ingin langsung menyalahkan pegawai. Langkah analitis pertama yang paling tepat adalah …",
+                        "o": [
+                                    "Menyusun surat teguran untuk seluruh PPPK yang kinerjanya rendah.",
+                                    "Membandingkan kebutuhan jabatan, kompetensi pegawai, hasil kerja, dan proses penempatan sebelum menentukan intervensi.",
+                                    "Memindahkan semua PPPK ke unit lain agar keluhan berhenti.",
+                                    "Mengurangi target kinerja agar terlihat tercapai.",
+                                    "Menyatakan bahwa kinerja rendah sepenuhnya kesalahan pegawai."
+                        ],
+                        "c": 1,
+                        "e": "C4 – Analisis harus dimulai dari hubungan antara kebutuhan jabatan, kompetensi, penempatan, dan hasil kerja sebelum menetapkan penyebab."
+            },
+            {
+                        "q": "Perjanjian kerja seorang PPPK akan dievaluasi. Atasan hanya menggunakan kesan pribadi selama dua minggu terakhir, sementara dokumen capaian sepanjang periode tersedia. Rekomendasi Anda adalah …",
+                        "o": [
+                                    "Mendukung atasan karena penilai selalu memiliki keputusan akhir.",
+                                    "Mengabaikan dokumen karena pengalaman atasan lebih penting.",
+                                    "Merekomendasikan penilaian berbasis bukti kinerja dan ketentuan yang berlaku, bukan kesan sesaat.",
+                                    "Meminta pegawai membuat laporan yang hanya berisi keberhasilannya.",
+                                    "Menunda evaluasi sampai pegawai pindah unit."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Mengevaluasi kualitas dasar pengambilan keputusan. Bukti capaian selama periode kerja lebih relevan daripada kesan sesaat."
+            },
+            {
+                        "q": "Dalam penyusunan rencana kerja, pimpinan menetapkan target tinggi tetapi tidak membahas dukungan, prioritas, dan hambatan bersama pegawai. Beberapa bulan kemudian target tidak tercapai. Kelemahan utamanya adalah …",
+                        "o": [
+                                    "Target tinggi harus selalu dihapus.",
+                                    "Pegawai tidak boleh diberi target menantang.",
+                                    "Perencanaan tidak didahului dialog yang mengklarifikasi ekspektasi hasil, perilaku, prioritas, dan dukungan yang diperlukan.",
+                                    "Evaluasi seharusnya hanya dilakukan pada akhir tahun.",
+                                    "Pimpinan seharusnya menyerahkan seluruh perencanaan kepada pegawai."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Dialog kinerja membantu mengklarifikasi ekspektasi dan dukungan sebelum pelaksanaan, sehingga target menjadi pedoman yang realistis dan terarah."
+            },
+            {
+                        "q": "Sebuah unit akan memperpanjang perjanjian kerja PPPK. Target utama tercapai, tetapi perilaku kerja menimbulkan banyak konflik dengan tim. Pendekatan paling tepat adalah …",
+                        "o": [
+                                    "Memperpanjang otomatis karena target tercapai.",
+                                    "Menolak perpanjangan hanya karena ada konflik interpersonal.",
+                                    "Menganalisis capaian hasil dan perilaku kerja secara menyeluruh berdasarkan bukti serta menggunakan hasil evaluasi sebagai dasar keputusan dan perbaikan.",
+                                    "Menghapus catatan konflik agar penilaian positif.",
+                                    "Meminta seluruh tim memilih apakah pegawai tersebut disukai."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Penilaian perlu melihat hasil kerja dan perilaku kerja secara objektif, kemudian menjadi dasar keputusan dan tindak lanjut."
+            },
+            {
+                        "q": "Seorang PPPK baru menerima tugas yang belum pernah dikerjakan. Rekan senior menyarankan langsung mencoba tanpa membaca ketentuan. Pilihan paling profesional adalah …",
+                        "o": [
+                                    "Langsung mencoba agar terlihat berani.",
+                                    "Menolak tugas karena belum pernah mengerjakannya.",
+                                    "Mempelajari ketentuan dan ekspektasi tugas, meminta klarifikasi yang diperlukan, kemudian melaksanakan dan mendokumentasikan hasilnya.",
+                                    "Menyerahkan tugas kepada pegawai senior.",
+                                    "Menunggu sampai ada masalah baru kemudian belajar."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Profesionalisme membutuhkan pemahaman tugas, klarifikasi ekspektasi, pelaksanaan, dan dokumentasi."
+            },
+            {
+                        "q": "Seorang PPPK selalu mengikuti banyak webinar, tetapi pola kesalahan dalam pekerjaannya tidak berubah. Ia merasa pengembangan kompetensinya berhasil karena memiliki banyak sertifikat. Evaluasi yang tepat adalah …",
+                        "o": [
+                                    "Benar, jumlah sertifikat merupakan ukuran utama kompetensi.",
+                                    "Benar, karena webinar selalu meningkatkan kompetensi.",
+                                    "Belum tentu; keberhasilan pengembangan kompetensi harus terlihat pada penerapan pengetahuan dan peningkatan kinerja, bukan sekadar jumlah pelatihan.",
+                                    "Salah karena PPPK tidak perlu mengikuti pelatihan.",
+                                    "Benar jika semua sertifikat berasal dari lembaga pemerintah."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Materi menekankan bahwa pengembangan kompetensi tidak diukur hanya dari jumlah pelatihan, tetapi dari penerapannya terhadap kinerja, kolaborasi, inovasi, dan pelayanan."
+            },
+            {
+                        "q": "Hasil evaluasi menunjukkan kemampuan Anda dalam pengolahan data masih tertinggal, sementara unit mulai menggunakan dashboard digital. Jika dana pelatihan terbatas, rancangan Individual Development Plan paling strategis adalah …",
+                        "o": [
+                                    "Menunggu anggaran pelatihan tersedia tahun depan.",
+                                    "Mengikuti semua kursus digital tanpa menentukan kebutuhan.",
+                                    "Menetapkan gap kompetensi, target kemampuan terukur, memilih pembelajaran mandiri atau kolaboratif yang relevan, lalu mengevaluasi penerapannya dalam pekerjaan.",
+                                    "Meminta rekan mengerjakan seluruh tugas pengolahan data.",
+                                    "Menghindari tugas yang menggunakan dashboard."
+                        ],
+                        "c": 2,
+                        "e": "C6 – Menyusun strategi pengembangan berdasarkan gap kompetensi, tujuan, sumber belajar, penerapan, dan evaluasi."
+            },
+            {
+                        "q": "Sebuah aplikasi baru menggantikan proses manual. Pegawai A mempelajari sistem dan meminta umpan balik, sedangkan B menolak karena cara lama lebih nyaman. Berdasarkan learning agility, kesimpulan terbaik adalah …",
+                        "o": [
+                                    "B lebih berpengalaman sehingga responsnya lebih tepat.",
+                                    "A menunjukkan kesiapan belajar dan beradaptasi terhadap perubahan, sedangkan B menunjukkan resistensi terhadap pembelajaran.",
+                                    "Keduanya sama karena teknologi tidak berkaitan dengan kompetensi.",
+                                    "B lebih kompeten karena mempertahankan pengalaman lama.",
+                                    "A salah karena terlalu cepat menerima teknologi baru."
+                        ],
+                        "c": 1,
+                        "e": "C4 – Learning agility tercermin dari kemauan belajar, menyesuaikan diri, menerima umpan balik, dan menerapkan pembelajaran pada situasi baru."
+            },
+            {
+                        "q": "Tim Anda memiliki kompetensi yang berbeda-beda. Untuk menyelesaikan masalah pelayanan, pimpinan meminta solusi yang dapat dipelajari bersama dan diterapkan lintas unit. Pilihan yang sesuai dengan Corporate University adalah …",
+                        "o": [
+                                    "Mengirim satu pegawai terbaik mengikuti kursus lalu menyimpan materinya.",
+                                    "Membuat pembelajaran yang terhubung dengan kebutuhan organisasi, melibatkan kolaborasi, berbagi praktik baik, dan mengaitkan hasil belajar dengan pekerjaan.",
+                                    "Mengandalkan pembelajaran formal saja.",
+                                    "Membiarkan setiap pegawai belajar sendiri tanpa tujuan organisasi.",
+                                    "Menunggu instruksi pusat sebelum melakukan pembelajaran."
+                        ],
+                        "c": 1,
+                        "e": "C5 – Corporate University menghubungkan pembelajaran dengan kebutuhan organisasi dan mendorong pembelajaran terintegrasi serta kolaboratif."
+            },
+            {
+                        "q": "Setelah mengikuti pelatihan komunikasi, Anda mendapat nilai ujian tinggi tetapi masih kesulitan menangani warga yang marah. Tindak lanjut paling tepat adalah …",
+                        "o": [
+                                    "Mengikuti pelatihan yang sama berulang-ulang tanpa praktik.",
+                                    "Menganggap pelatihan gagal dan berhenti belajar.",
+                                    "Menggunakan situasi pelayanan nyata sebagai ruang praktik, meminta umpan balik, merefleksikan hasil, dan menyesuaikan strategi komunikasi.",
+                                    "Meminta warga selalu berbicara dengan petugas lain.",
+                                    "Menghapus catatan keluhan agar masalah tidak terlihat."
+                        ],
+                        "c": 2,
+                        "e": "C6 – Pengembangan kompetensi bersifat berkelanjutan melalui penerapan, refleksi, dan umpan balik."
+            },
+            {
+                        "q": "Dalam dialog kinerja, atasan mengatakan 'tingkatkan kualitas pekerjaan' tanpa indikator atau target yang jelas. Agar SKP dapat menjadi pedoman yang dapat dievaluasi, respons terbaik adalah …",
+                        "o": [
+                                    "Menerima saja karena target tidak perlu ditanyakan.",
+                                    "Meminta atasan menjelaskan hasil yang diharapkan, indikator keberhasilan, target, prioritas, dan dukungan yang diperlukan.",
+                                    "Menentukan target sendiri tanpa memberi tahu atasan.",
+                                    "Menunggu penilaian akhir untuk mengetahui apakah kinerja baik.",
+                                    "Mengganti target dengan kegiatan yang mudah dilakukan."
+                        ],
+                        "c": 1,
+                        "e": "C5 – Dialog kinerja digunakan untuk mengklarifikasi ekspektasi hasil kerja dan perilaku kerja agar SKP menjadi pedoman yang jelas."
+            },
+            {
+                        "q": "Selama periode kinerja, capaian seorang PPPK tertinggal karena perubahan kebijakan. Ia tidak pernah membicarakan hambatan sampai evaluasi akhir. Jika Anda menjadi atasannya, perbaikan sistem yang tepat adalah …",
+                        "o": [
+                                    "Menurunkan nilai tanpa membahas penyebab.",
+                                    "Menghapus target agar tidak ada masalah.",
+                                    "Membangun dialog kinerja berkala agar hambatan, dukungan, dan penyesuaian strategi dibahas sebelum akhir periode.",
+                                    "Menunggu tahun berikutnya karena evaluasi hanya sekali.",
+                                    "Meminta pegawai bekerja lembur tanpa dukungan."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Dialog kinerja dilakukan berkala sehingga hambatan dapat diidentifikasi dan solusi diberikan lebih dini."
+            },
+            {
+                        "q": "Data menunjukkan seorang pegawai menyelesaikan 100% target kuantitas, tetapi keluhan masyarakat meningkat karena kualitas hasil rendah. Bagaimana data tersebut seharusnya dibaca?",
+                        "o": [
+                                    "Pegawai pasti berkinerja sangat baik karena target kuantitas tercapai.",
+                                    "Keluhan masyarakat harus diabaikan karena tidak termasuk SKP.",
+                                    "Capaian perlu dianalisis bersama kualitas hasil dan perilaku kerja untuk melihat apakah kinerja benar-benar mendukung tujuan organisasi.",
+                                    "Target kuantitas harus selalu ditingkatkan tanpa memperhatikan kualitas.",
+                                    "Pegawai harus langsung diberi sanksi."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Capaian kuantitas perlu dibaca bersama kualitas dan perilaku kerja agar kontribusi terhadap tujuan organisasi terlihat utuh."
+            },
+            {
+                        "q": "Hasil evaluasi menunjukkan kesenjangan kompetensi menyebabkan target tidak tercapai. Atasan menyarankan hukuman, tetapi data menunjukkan pegawai belum pernah mendapat dukungan pengembangan yang relevan. Tindak lanjut paling kuat adalah …",
+                        "o": [
+                                    "Memberikan hukuman tanpa analisis.",
+                                    "Mengabaikan kesenjangan karena target tetap harus tercapai.",
+                                    "Menggunakan hasil evaluasi untuk memberi umpan balik, menentukan kebutuhan pengembangan kompetensi, dan menyusun perbaikan kinerja yang terukur.",
+                                    "Menghapus target yang gagal dari SKP.",
+                                    "Memindahkan pegawai tanpa memberi umpan balik."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Hasil evaluasi dapat menjadi dasar umpan balik, pengembangan kompetensi, dan perbaikan kinerja, bukan sekadar pemberian label."
+            },
+            {
+                        "q": "Anda diminta membuat laporan kinerja bulanan. Beberapa hasil belum selesai, tetapi pimpinan meminta semuanya ditulis 'selesai' agar dashboard terlihat hijau. Tindakan yang paling mendukung sistem kinerja berkelanjutan adalah …",
+                        "o": [
+                                    "Mengikuti permintaan agar reputasi unit terjaga.",
+                                    "Menulis selesai lalu memperbaiki data setelah audit.",
+                                    "Menyajikan capaian apa adanya, menjelaskan gap dan penyebabnya, serta mengusulkan tindakan perbaikan dengan target waktu.",
+                                    "Menghapus pekerjaan yang belum selesai dari laporan.",
+                                    "Meminta rekan menandatangani laporan tersebut."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Data kinerja yang akurat menjadi dasar evaluasi dan perbaikan. Manipulasi laporan menghilangkan fungsi SKP sebagai alat pengelolaan kinerja."
+            },
+            {
+                        "q": "Sebuah inovasi internal berhasil menghemat waktu pegawai, tetapi belum memberi manfaat berarti bagi masyarakat. Pimpinan menyebut inovasi itu sudah pasti berdampak. Analisis paling tepat adalah …",
+                        "o": [
+                                    "Benar, setiap inovasi internal pasti berdampak publik.",
+                                    "Tidak perlu dinilai karena inovasi hanya untuk pegawai.",
+                                    "Dampak perlu dilihat dari perubahan nyata bagi organisasi dan/atau masyarakat serta keterkaitannya dengan tujuan pelayanan.",
+                                    "Inovasi hanya berdampak jika mendapat liputan media.",
+                                    "Dampak cukup diukur dari jumlah aplikasi yang dibuat."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Menjadi PPPK berdampak menekankan kontribusi nyata. Inovasi perlu dinilai berdasarkan manfaat dan perubahan yang dihasilkan."
+            },
+            {
+                        "q": "Anda menemukan prosedur pelayanan dapat dipangkas dari lima tahap menjadi tiga tanpa mengurangi kontrol yang diwajibkan. Agar perubahan benar-benar berdampak dan berkelanjutan, langkah terbaik adalah …",
+                        "o": [
+                                    "Mengubah prosedur sendiri mulai besok.",
+                                    "Membagikan perubahan melalui grup pribadi.",
+                                    "Menganalisis risiko, menguji usulan, berkoordinasi dengan pihak terkait, mengusulkan penyederhanaan melalui mekanisme yang berlaku, lalu mengukur dampaknya.",
+                                    "Menunggu masyarakat mengeluh terlebih dahulu.",
+                                    "Menghapus dua tahap tanpa dokumentasi."
+                        ],
+                        "c": 2,
+                        "e": "C6 – Dampak berkelanjutan membutuhkan analisis, kolaborasi, tata kelola perubahan, dan pengukuran hasil."
+            },
+            {
+                        "q": "Seorang PPPK selalu mengatakan 'saya hanya menjalankan tugas sesuai uraian jabatan' ketika melihat masalah pelayanan yang sebenarnya dapat ia bantu melalui koordinasi. Sikap tersebut kurang sesuai dengan gagasan …",
+                        "o": [
+                                    "Beyond Status, It's Impact.",
+                                    "Administrasi berbasis dokumen.",
+                                    "Kepatuhan terhadap jam kerja.",
+                                    "Pembatasan komunikasi antarunit.",
+                                    "Orientasi pada rutinitas."
+                        ],
+                        "c": 0,
+                        "e": "C4 – Materi menekankan bahwa keberhasilan PPPK tidak hanya diukur dari pelaksanaan tugas, tetapi juga kontribusi nyata dan dampak positif."
+            },
+            {
+                        "q": "Tim Anda menemukan keluhan masyarakat yang sama berulang selama enam bulan. Keluhan selalu dijawab satu per satu, tetapi akar masalah tidak pernah diperbaiki. Strategi berorientasi dampak adalah …",
+                        "o": [
+                                    "Menambah jumlah petugas untuk menjawab keluhan.",
+                                    "Membalas keluhan lebih cepat tanpa mengubah proses.",
+                                    "Menganalisis pola keluhan, menemukan akar masalah, merancang perbaikan proses bersama unit terkait, dan mengukur apakah keluhan berulang menurun.",
+                                    "Menutup kanal pengaduan agar jumlah keluhan turun.",
+                                    "Menyalahkan masyarakat karena tidak membaca informasi."
+                        ],
+                        "c": 2,
+                        "e": "C6 – Orientasi dampak mendorong penyelesaian akar masalah dan pengukuran perubahan, bukan sekadar meningkatkan volume respons."
+            },
+            {
+                        "q": "Dalam proyek lintas unit, Anda mendapat kesempatan mengambil kredit pribadi atas keberhasilan tim karena nama Anda paling sering berkomunikasi dengan pimpinan. Pilihan yang paling mencerminkan PPPK berdampak adalah …",
+                        "o": [
+                                    "Mengambil seluruh kredit karena Anda menjadi penghubung utama.",
+                                    "Tidak menyebut kontribusi siapa pun agar tidak menimbulkan konflik.",
+                                    "Mengakui kontribusi anggota tim, mendokumentasikan hasil bersama, dan menonjolkan manfaat proyek bagi organisasi atau masyarakat.",
+                                    "Menyebarkan cerita bahwa Anda satu-satunya penggagas.",
+                                    "Menolak menerima apresiasi apa pun."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Dampak dibangun melalui kontribusi dan kolaborasi. Pengakuan yang adil memperkuat budaya kerja dan menunjukkan keberhasilan sebagai hasil bersama."
+            },
+            {
+                        "q": "Seorang PPPK aktif membuat konten profesional di media sosial tentang pekerjaannya. Kontennya menarik perhatian, tetapi beberapa unggahan menyindir masyarakat yang dianggap tidak paham aturan. Analisis paling tepat adalah …",
+                        "o": [
+                                    "Personal branding pasti berhasil karena jumlah pengikut meningkat.",
+                                    "Tidak masalah karena akun tersebut milik pribadi.",
+                                    "Popularitas tidak cukup; reputasi profesional juga dibangun melalui etika komunikasi, integritas, dan orientasi pelayanan.",
+                                    "Konten harus dibuat lebih provokatif agar viral.",
+                                    "Akun sebaiknya dihapus agar tidak ada risiko."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Personal branding bukan sekadar pencitraan. Reputasi dibangun melalui perilaku, komunikasi, integritas, profesionalisme, dan kontribusi."
+            },
+            {
+                        "q": "Anda ingin membangun personal branding sebagai PPPK yang kompeten di bidang layanan digital. Strategi enam bulan yang paling kuat adalah …",
+                        "o": [
+                                    "Mengunggah foto kegiatan setiap hari tanpa menunjukkan hasil.",
+                                    "Membeli pengikut agar terlihat berpengaruh.",
+                                    "Meningkatkan kompetensi, menghasilkan perbaikan layanan yang terukur, berkomunikasi secara etis, berbagi pembelajaran yang relevan, dan mendokumentasikan kontribusi.",
+                                    "Mengomentari semua unggahan pejabat agar dikenal.",
+                                    "Mengikuti semua tren media sosial tanpa kaitan dengan pekerjaan."
+                        ],
+                        "c": 2,
+                        "e": "C6 – Rencana personal branding yang kuat menggabungkan kompetensi, integritas, profesionalisme, komunikasi, dan kontribusi secara konsisten."
+            },
+            {
+                        "q": "Pimpinan meminta unggahan yang menonjolkan keberhasilan unit, tetapi data menunjukkan hasil belum mencapai target. Anda ingin menjaga hubungan kerja sekaligus mempertahankan integritas. Pilihan terbaik adalah …",
+                        "o": [
+                                    "Mengubah angka agar tampak berhasil.",
+                                    "Menolak seluruh komunikasi publik tanpa memberi alternatif.",
+                                    "Menyampaikan data secara akurat dengan konteks dan rencana perbaikan, sehingga komunikasi tetap konstruktif tanpa menyesatkan publik.",
+                                    "Menghapus bagian target dari unggahan.",
+                                    "Menyalahkan pegawai yang belum mencapai target."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Integritas merupakan konsistensi antara perkataan dan tindakan. Komunikasi profesional dapat tetap positif tanpa mengubah fakta."
+            },
+            {
+                        "q": "Rekan Anda memiliki kompetensi teknis sangat baik, tetapi sering terlambat merespons kebutuhan masyarakat dan sulit diajak bekerja sama. Mengapa personal branding-nya belum kuat?",
+                        "o": [
+                                    "Karena ia kurang aktif di media sosial.",
+                                    "Karena personal branding hanya ditentukan kemampuan komunikasi.",
+                                    "Karena kompetensi perlu berjalan bersama integritas, profesionalisme, komunikasi, dan kontribusi agar reputasi profesional terbentuk utuh.",
+                                    "Karena pegawai teknis tidak membutuhkan personal branding.",
+                                    "Karena masyarakat tidak dapat menilai kompetensi."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Lima pilar personal branding dalam materi adalah kompetensi, integritas, profesionalisme, komunikasi, dan kontribusi."
+            },
+            {
+                        "q": "Anda mendapat kritik tajam dari masyarakat terhadap layanan yang Anda tangani. Kritik tersebut sebagian benar dan sebagian keliru. Respons yang paling mendukung reputasi profesional adalah …",
+                        "o": [
+                                    "Membalas kritik dengan nada yang sama agar masyarakat jera.",
+                                    "Menghapus komentar yang mengkritik.",
+                                    "Memilah fakta dan opini, memperbaiki bagian yang benar, menjelaskan informasi secara santun, dan menggunakan kritik sebagai bahan perbaikan.",
+                                    "Mengabaikan seluruh kritik karena bukan penilaian resmi.",
+                                    "Membuat unggahan yang menunjukkan kesalahan masyarakat."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Komunikasi efektif dan kemauan belajar dari masukan memperkuat kepercayaan. Reputasi profesional terbentuk dari konsistensi perilaku."
+            },
+            {
+                        "q": "Pesan berantai di grup kerja menyatakan ada perubahan kebijakan ASN dan meminta penerima mengklik tautan untuk mengunduh surat keputusan. Tautan menggunakan domain yang tidak dikenal. Langkah terbaik adalah …",
+                        "o": [
+                                    "Meneruskan pesan agar semua pegawai segera tahu.",
+                                    "Mengklik tautan menggunakan komputer kantor untuk memeriksa isinya.",
+                                    "Memverifikasi informasi melalui sumber resmi, tidak membuka tautan mencurigakan, dan melaporkan pesan jika terindikasi phishing.",
+                                    "Menyimpan pesan tanpa memberi tahu siapa pun.",
+                                    "Membalas dengan data pribadi untuk memastikan identitas pengirim."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Literasi digital menuntut kemampuan mengevaluasi informasi sekaligus menjaga keamanan dari phishing dan melindungi data."
+            },
+            {
+                        "q": "Unit Anda ingin membuat kampanye digital untuk meningkatkan literasi masyarakat. Sebagian anggota hanya ingin membuat konten viral, sedangkan data menunjukkan kelompok sasaran memiliki keterbatasan akses dan kemampuan digital. Rancangan terbaik adalah …",
+                        "o": [
+                                    "Membuat konten sebanyak mungkin tanpa memetakan sasaran.",
+                                    "Menggunakan satu platform populer untuk semua kelompok.",
+                                    "Memetakan kebutuhan dan kesenjangan sasaran, memilih media yang sesuai, menggunakan bahasa inklusif, melakukan verifikasi informasi, dan mengukur perubahan pemahaman.",
+                                    "Mengutamakan jumlah tayangan sebagai satu-satunya indikator.",
+                                    "Membuat konten kontroversial agar viral."
+                        ],
+                        "c": 2,
+                        "e": "C6 – Program literasi digital perlu disesuaikan dengan kebutuhan sasaran dan mempertimbangkan kecakapan, etika, budaya, serta keamanan digital."
+            },
+            {
+                        "q": "Anda menerima dua infografik tentang kebijakan pemerintah. Infografik pertama memiliki desain profesional tetapi tidak mencantumkan sumber. Infografik kedua lebih sederhana tetapi menyediakan sumber resmi dan tanggal pembaruan. Pilihan analitis yang lebih dapat dipertanggungjawabkan adalah …",
+                        "o": [
+                                    "Infografik pertama karena desain profesional menunjukkan kredibilitas.",
+                                    "Keduanya sama karena informasi digital tidak perlu sumber.",
+                                    "Infografik kedua lebih layak dijadikan dasar setelah sumber dan konteksnya diverifikasi.",
+                                    "Infografik pertama karena dibagikan lebih banyak orang.",
+                                    "Pilih yang paling menarik secara visual."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Literasi informasi dan data mencakup evaluasi informasi digital. Tampilan bukan pengganti verifikasi sumber dan konteks."
+            },
+            {
+                        "q": "Dalam grup WhatsApp kantor, seorang pegawai mengunggah meme yang menyerang identitas kelompok masyarakat tertentu. Beberapa anggota ingin meneruskannya. Sebagai admin, tindakan paling tepat adalah …",
+                        "o": [
+                                    "Meneruskan karena hanya humor.",
+                                    "Membiarkan agar kebebasan berekspresi tidak terganggu.",
+                                    "Menghentikan penyebaran, mengingatkan etika dan nilai kebangsaan, serta mengarahkan komunikasi kembali pada konteks pekerjaan.",
+                                    "Menghapus semua anggota yang berbeda pendapat.",
+                                    "Membalas dengan meme dari kelompok lain."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Budaya dan etika digital menuntut komunikasi yang menghormati Pancasila, Bhinneka Tunggal Ika, dan sesama pengguna ruang digital."
+            },
+            {
+                        "q": "Tim pelayanan menyimpan dokumen masyarakat di layanan cloud gratis menggunakan akun pribadi karena dianggap praktis. Tidak ada pengaturan akses. Analisis risiko dan solusi yang paling tepat adalah …",
+                        "o": [
+                                    "Tidak ada risiko karena cloud selalu aman.",
+                                    "Risikonya hanya kehilangan koneksi internet.",
+                                    "Ada risiko privasi dan keamanan; tim perlu menggunakan sarana resmi, membatasi akses, dan menerapkan pengelolaan data sesuai kebijakan keamanan instansi.",
+                                    "Dokumen boleh dibagikan selama nama file disamarkan.",
+                                    "Akun pribadi lebih aman karena hanya diketahui pegawai."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Pilar keamanan digital menuntut perlindungan data pribadi dan identitas digital serta kontrol akses yang tepat."
+            },
+            {
+                        "q": "Anda menggunakan AI generatif untuk membuat ringkasan laporan. AI menghasilkan beberapa angka yang tidak ada dalam dokumen sumber. Rekan menyarankan langsung memasukkannya ke laporan resmi. Apa tindakan paling tepat?",
+                        "o": [
+                                    "Menggunakan semua angka karena AI biasanya akurat.",
+                                    "Memasukkan angka tersebut tetapi mengecilkan ukuran font.",
+                                    "Melakukan verifikasi silang dengan sumber asli, memperbaiki hasil yang keliru, dan hanya menggunakan informasi yang dapat dipertanggungjawabkan.",
+                                    "Menghapus seluruh laporan karena AI tidak boleh digunakan.",
+                                    "Meminta AI membuat versi kedua lalu memilih angka yang paling masuk akal."
+                        ],
+                        "c": 2,
+                        "e": "C4 – Prinsip transparansi dan akuntabilitas AI mengharuskan output diverifikasi sebelum digunakan dalam dokumen atau keputusan resmi."
+            },
+            {
+                        "q": "Sebuah unit ingin memakai AI untuk menyaring permohonan bantuan. Model dilatih dari data historis yang lebih banyak berasal dari wilayah perkotaan. Setelah diuji, warga dari daerah tertentu lebih sering ditolak. Langkah terbaik adalah …",
+                        "o": [
+                                    "Menggunakan model karena sudah dilatih dari data nyata.",
+                                    "Menghapus semua data wilayah yang tidak dominan.",
+                                    "Menganalisis potensi bias, menguji model pada kelompok yang beragam, memperbaiki data atau metode, dan memastikan keputusan tetap dapat dipertanggungjawabkan manusia.",
+                                    "Menyerahkan seluruh keputusan kepada AI agar tidak ada subjektivitas pegawai.",
+                                    "Menutupi hasil uji agar proyek tidak dihentikan."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Prinsip inklusivitas dan akuntabilitas AI menuntut evaluasi bias dan pengawasan manusia agar teknologi tidak menghasilkan perlakuan tidak adil."
+            },
+            {
+                        "q": "Instansi akan meluncurkan chatbot AI untuk menjawab pertanyaan masyarakat. Tim ingin langsung mengaktifkannya meskipun belum ada pengujian keamanan dan akurasi. Pilihan paling bertanggung jawab adalah …",
+                        "o": [
+                                    "Meluncurkan saja dan memperbaiki setelah ada keluhan.",
+                                    "Mengaktifkan hanya pada jam sibuk agar cepat diuji masyarakat.",
+                                    "Menunda atau membatasi peluncuran sampai pengujian, mitigasi risiko, perlindungan data, transparansi batasan sistem, dan mekanisme eskalasi manusia siap.",
+                                    "Mematikan fitur keamanan agar chatbot lebih cepat.",
+                                    "Membiarkan AI menjawab semua pertanyaan tanpa supervisi."
+                        ],
+                        "c": 2,
+                        "e": "C6 – Pengembangan AI untuk pemerintahan membutuhkan pengujian, keamanan, privasi, transparansi, inklusivitas, dan akuntabilitas sebelum digunakan."
+            },
+            {
+                        "q": "Seorang pegawai memasukkan seluruh dokumen internal yang berisi data pribadi warga ke layanan AI publik agar dapat membuat analisis lebih cepat. Penilaian yang paling tepat adalah …",
+                        "o": [
+                                    "Tepat karena tujuannya pekerjaan.",
+                                    "Tepat jika pegawai tidak mengunduh hasil AI.",
+                                    "Berisiko karena data pribadi harus dilindungi; penggunaan AI perlu mempertimbangkan keamanan, privasi, sarana yang diizinkan, dan minimisasi data.",
+                                    "Tidak berisiko jika dokumen berformat PDF.",
+                                    "Hanya berisiko jika masyarakat mengetahui penggunaan AI."
+                        ],
+                        "c": 2,
+                        "e": "C5 – Prinsip privasi dan keamanan AI mengharuskan perlindungan data pribadi sepanjang siklus penggunaan, termasuk saat data dimasukkan ke sistem."
+            },
+            {
+                        "q": "Pimpinan meminta rekomendasi kebijakan berdasarkan analisis AI. AI memberikan rekomendasi logis tetapi tidak menjelaskan keterbatasan data dan sumber yang digunakan. Proses paling akuntabel adalah …",
+                        "o": [
+                                    "Mengikuti rekomendasi karena AI dianggap objektif.",
+                                    "Menghapus semua rekomendasi AI dari proses kerja.",
+                                    "Menjadikan AI sebagai alat bantu, memeriksa sumber dan asumsi, menguji hasil, menjelaskan keterbatasannya, dan memastikan keputusan akhir berada dalam tanggung jawab manusia.",
+                                    "Meminta AI memilih keputusan terbaik tanpa data tambahan.",
+                                    "Menggunakan rekomendasi hanya jika sesuai keinginan pimpinan."
+                        ],
+                        "c": 2,
+                        "e": "C6 – Transparansi dan akuntabilitas menempatkan AI sebagai alat bantu. Manusia tetap harus memahami batasan, memeriksa hasil, dan bertanggung jawab atas keputusan."
+            }
+];
+
+        // Fisher-Yates: setiap sesi mengacak urutan soal dan pilihan jawaban.
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function shuffleQuestionOptions(question) {
+            const options = question.o.map((text, index) => ({ text, correct: index === question.c }));
+            const shuffled = shuffleArray(options);
+            return { ...question, o: shuffled.map(x => x.text), c: shuffled.findIndex(x => x.correct) };
+        }
+
+        function buildExamQuestions() {
+            return shuffleArray(generateQuestions()).map(shuffleQuestionOptions);
+        }
+
+        // ==========================================
+        // 2. STATE MANAGEMENT
+        // ==========================================
+        const examData = {
+            duration: 90 * 60, // 90 Menit = 5400 Detik
+            passingScore: 72.5
+        };
+
+        let appState = {
+            currentScreen: 'login', // login | instruction | exam | result
+            name: '',
+            nip: '',
+            questions: [],
+            currentIndex: 0,
+            answers: {}, 
+            flagged: {},
+            timeLeft: examData.duration,
+            timerInterval: null,
+            scoreData: null,
+            attempt: 1,
+            maxAttempts: 3
+        };
+
+        // ==========================================
+        // 3. CUSTOM MODAL (NO ALERT/CONFIRM)
+        // ==========================================
+        function showModal(type, title, message, buttons) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            
+            const iconDiv = document.getElementById('modal-icon');
+            if (type === 'error') {
+                iconDiv.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-rose-100 text-rose-600';
+                iconDiv.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            } else if (type === 'warning') {
+                iconDiv.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-amber-100 text-amber-600';
+                iconDiv.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+            } else {
+                iconDiv.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600';
+                iconDiv.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+            }
+
+            const actionsDiv = document.getElementById('modal-actions');
+            actionsDiv.innerHTML = '';
+            
+            buttons.forEach(btn => {
+                const b = document.createElement('button');
+                b.className = `px-5 py-2.5 rounded-lg text-sm font-bold transition flex-1 sm:flex-none text-center ${btn.classNames}`;
+                b.innerText = btn.text;
+                b.onclick = () => {
+                    document.getElementById('custom-modal').classList.remove('modal-active');
+                    document.getElementById('custom-modal').classList.add('hidden');
+                    if(btn.onClick) btn.onClick();
+                };
+                actionsDiv.appendChild(b);
+            });
+
+            document.getElementById('custom-modal').classList.remove('hidden');
+            document.getElementById('custom-modal').classList.add('modal-active');
+        }
+
+        // ==========================================
+        // 4. RENDERING ENGINE (SPA Logic)
+        // ==========================================
+        function render() {
+            const app = document.getElementById('app');
+            if (appState.currentScreen === 'login') app.innerHTML = renderLogin();
+            else if (appState.currentScreen === 'instruction') app.innerHTML = renderInstruction();
+            else if (appState.currentScreen === 'exam') app.innerHTML = renderExam();
+            else if (appState.currentScreen === 'result') app.innerHTML = renderResult();
+        }
+
+        // --- PAGE 1: LOGIN ---
+        function renderLogin() {
+            return `
+                <div class="flex-1 flex justify-center items-center p-4 fade-in">
+                    <div class="bg-white rounded-3xl shadow-xl w-full max-w-md p-8 sm:p-10 border border-slate-200 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+                        <div class="text-center mb-10 mt-4">
+                            <div class="inline-flex bg-indigo-50 text-indigo-600 p-4 rounded-2xl mb-4 shadow-sm">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            </div>
+                            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Tryout CBT PPPK</h1>
+                            <p class="text-sm font-medium text-slate-500 mt-2">Evaluasi Akademik 1: Orientasi ASN</p>
+                        </div>
+                        <form onsubmit="handleLogin(event)" class="space-y-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Nama Peserta</label>
+                                <input type="text" id="inputName" required placeholder="Ketik nama lengkap..." class="w-full p-3.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition text-sm font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">NIP (18 Digit)</label>
+                                <input type="text" id="inputNip" required placeholder="Contoh: 199001012024211001" maxlength="18" class="w-full p-3.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none font-mono text-sm">
+                            </div>
+                            <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl transition shadow-lg mt-4 text-sm uppercase tracking-widest">
+                                Masuk Portal
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const name = document.getElementById('inputName').value.trim();
+            const nip = document.getElementById('inputNip').value.trim();
+
+            if (!/^\d{18}$/.test(nip)) {
+                showModal('error', 'Validasi Gagal', 'Nomor Induk Pegawai (NIP) wajib terdiri dari tepat 18 digit angka, tanpa huruf atau spasi.', [
+                    { text: 'Perbaiki', classNames: 'bg-rose-600 text-white hover:bg-rose-700 w-full' }
+                ]);
+                return;
+            }
+            appState.name = name;
+            appState.nip = nip;
+            appState.currentScreen = 'instruction';
+            render();
+        }
+
+        // --- PAGE 2: INSTRUCTIONS ---
+        function renderInstruction() {
+            return `
+                <div class="flex-1 flex justify-center items-center p-4 fade-in">
+                    <div class="bg-white rounded-3xl shadow-xl w-full max-w-2xl p-8 sm:p-12 border border-slate-200">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-slate-100 pb-6">
+                            <div>
+                                <h2 class="text-2xl font-black text-slate-900 mb-1">Tata Tertib CBT</h2>
+                                <p class="text-sm font-medium text-slate-500">Baca instruksi sebelum memulai ujian.</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-indigo-600">${appState.name}</p>
+                                <p class="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded inline-block mt-1 border border-slate-100">${appState.nip}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 mb-8">
+                            <ul class="space-y-4 text-sm font-medium text-indigo-900 list-disc pl-4 leading-relaxed">
+                                <li><strong>40 Soal Analisis Kasus (HOTS):</strong> Ujian mengukur kompetensi C4-C6 Manajerial dan BerAKHLAK.</li>
+                                <li><strong>Sistem Acak Otomatis (Shuffle):</strong> Urutan soal di-generate acak pada setiap sesi.</li>
+                                <li><strong>Alokasi Waktu:</strong> 90 Menit. Sistem akan otomatis tersubmit (terkunci) saat timer habis.</li>
+                                <li class="text-rose-700 bg-rose-100/50 p-2 rounded-lg -ml-4 pl-6 relative">
+                                    <div class="absolute left-0 top-0 h-full w-1 bg-rose-500 rounded-l-lg"></div>
+                                    <strong>Syarat Remedial:</strong> Kunci jawaban dan pembahasan HANYA dapat diakses apabila nilai akhir mencapai KKM (Lulus).
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="flex flex-col-reverse sm:flex-row justify-end gap-3">
+                            <button onclick="appState.currentScreen='login'; render();" class="px-6 py-3.5 rounded-xl text-slate-500 font-bold bg-slate-100 hover:bg-slate-200 transition text-sm">Kembali</button>
+                            <button onclick="startExam()" class="px-8 py-3.5 rounded-xl text-white font-bold bg-indigo-600 hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 text-sm uppercase tracking-widest">Setuju & Mulai Ujian</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startExam(isRemedial = false) {
+            if (isRemedial) appState.attempt++;
+            appState.currentScreen = 'exam';
+            appState.currentIndex = 0;
+            appState.answers = {};
+            appState.flagged = {};
+            appState.timeLeft = examData.duration;
+
+            // Setiap sesi baru dan setiap remedial mendapatkan randomisasi baru.
+            appState.questions = buildExamQuestions();
+
+            if (appState.timerInterval) clearInterval(appState.timerInterval);
+            appState.timerInterval = setInterval(() => {
+                if (appState.timeLeft > 0) {
+                    appState.timeLeft--;
+                    const el = document.getElementById('timer-val');
+                    if (el) {
+                        const m = Math.floor(appState.timeLeft / 60);
+                        const ss = appState.timeLeft % 60;
+                        el.innerText = `${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
+                        if(appState.timeLeft <= 300) {
+                            el.parentElement.classList.add('bg-rose-100','text-rose-800','border-rose-300');
+                            el.classList.add('animate-pulse');
+                        }
+                    }
+                } else {
+                    clearInterval(appState.timerInterval);
+                    processSubmission();
+                }
+            }, 1000);
+            render();
+        }
+
+        // --- PAGE 3: EXAM (NAVIGASI DI SEBELAH KIRI) ---
+        function renderExam() {
+            const q = appState.questions[appState.currentIndex];
+            const m = Math.floor(appState.timeLeft / 60), ss = appState.timeLeft % 60;
+            const timeStr = `${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
+
+            return `
+                <header class="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 py-3 shadow-sm">
+                    <div class="max-w-[1250px] mx-auto flex justify-between items-center gap-4">
+                        <div class="hidden sm:flex flex-col">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">TRYOUT EVALUASI AKADEMIK 1</span>
+                            <span class="text-sm font-bold text-slate-800">${appState.name}</span>
+                        </div>
+                        <div class="flex items-center gap-3 sm:gap-5 ml-auto">
+                            <span class="hidden md:block text-xs font-bold text-slate-500">Percobaan ${appState.attempt}/${appState.maxAttempts}</span>
+                            <div class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl border border-slate-200">
+                                <span>⏱</span><span id="timer-val" class="font-mono font-bold tracking-widest">${timeStr}</span>
+                            </div>
+                            <button onclick="confirmSubmit()" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2 rounded-xl text-sm font-bold">Selesai & Kumpulkan</button>
+                        </div>
+                    </div>
+                </header>
+
+                <main class="flex-1 w-full max-w-[1250px] mx-auto px-3 sm:px-4 py-5 sm:py-7 fade-in">
+                    <div class="grid grid-cols-1 lg:grid-cols-[245px_minmax(0,1fr)] gap-5 items-start">
+                        <aside class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 lg:sticky lg:top-[80px]">
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                                <div><h4 class="font-black text-slate-800 text-sm uppercase tracking-widest">Navigasi Soal</h4><p class="text-[10px] text-slate-400 mt-1">Pilih nomor soal</p></div>
+                                <span class="text-xs font-black text-indigo-600">${appState.currentIndex+1}/40</span>
+                            </div>
+                            <div class="grid grid-cols-5 gap-2">
+                                ${appState.questions.map((_,idx)=>{
+                                    const ans=appState.answers[idx]!==undefined, flag=appState.flagged[idx], cur=appState.currentIndex===idx;
+                                    let cls="bg-white border-2 border-slate-200 text-slate-500 hover:bg-slate-50";
+                                    if(ans) cls="bg-indigo-600 text-white border-indigo-700";
+                                    if(flag) cls="bg-amber-400 text-amber-900 border-amber-500";
+                                    if(cur) cls+=" ring-[3px] ring-slate-900 ring-offset-1 font-black";
+                                    return `<button onclick="appState.currentIndex=${idx};render();window.scrollTo({top:0,behavior:'smooth'});" class="h-10 w-full rounded-lg text-xs font-bold flex items-center justify-center ${cls}">${idx+1}</button>`;
+                                }).join('')}
+                            </div>
+                            <div class="border-t border-slate-100 mt-5 pt-4 space-y-2 text-[10px] font-bold text-slate-500">
+                                <div><span class="inline-block w-3 h-3 bg-indigo-600 rounded mr-2"></span>Sudah dijawab</div>
+                                <div><span class="inline-block w-3 h-3 border-2 border-slate-300 rounded mr-2"></span>Belum dijawab</div>
+                                <div><span class="inline-block w-3 h-3 bg-amber-400 rounded mr-2"></span>Ragu-ragu</div>
+                            </div>
+                        </aside>
+
+                        <section class="bg-white p-5 sm:p-9 rounded-2xl sm:rounded-[2rem] border border-slate-200 shadow-sm">
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-5 mb-7">
+                                <h3 class="bg-slate-900 text-white px-4 py-1.5 rounded-lg text-sm font-black tracking-widest">SOAL NO. ${appState.currentIndex+1}</h3>
+                                <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">HOTS • C4–C6</span>
+                            </div>
+                            <p class="text-base sm:text-lg font-medium text-slate-800 leading-relaxed mb-8 text-justify">${q.q}</p>
+                            <div class="space-y-3">
+                                ${q.o.map((opt,idx)=>{
+                                    const sel=appState.answers[appState.currentIndex]===idx;
+                                    return `<label class="relative flex items-start p-4 sm:p-5 rounded-xl border-2 cursor-pointer transition-all ${sel?'border-indigo-600 bg-indigo-50/50':'border-slate-100 hover:bg-slate-50 hover:border-slate-300'}">
+                                        <input type="radio" name="option" class="peer sr-only" ${sel?'checked':''} onchange="appState.answers[${appState.currentIndex}]=${idx};render();">
+                                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-slate-300 flex items-center justify-center mr-4 mt-0.5 bg-white shrink-0"><div class="radio-dot w-2.5 h-2.5 rounded-full bg-transparent"></div></div>
+                                        <div class="text-sm sm:text-base text-slate-700 font-medium leading-relaxed"><span class="font-black text-slate-300 mr-2">${String.fromCharCode(65+idx)}.</span>${opt}</div>
+                                    </label>`;
+                                }).join('')}
+                            </div>
+                            <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mt-8 pt-6 border-t border-slate-100">
+                                <button onclick="if(appState.currentIndex>0){appState.currentIndex--;render();}" ${appState.currentIndex===0?'disabled':''} class="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold border-2 border-slate-200 ${appState.currentIndex===0?'opacity-40 cursor-not-allowed':'hover:bg-slate-50'}">← Soal Sebelumnya</button>
+                                <label class="w-full sm:w-auto flex items-center justify-center gap-2 border-2 px-5 py-3 rounded-xl text-sm font-bold cursor-pointer ${appState.flagged[appState.currentIndex]?'border-amber-400 bg-amber-50 text-amber-800':'border-slate-200 text-slate-500'}">
+                                    <input type="checkbox" ${appState.flagged[appState.currentIndex]?'checked':''} onchange="appState.flagged[${appState.currentIndex}]=!appState.flagged[${appState.currentIndex]};render();"> Tandai Ragu-Ragu
+                                </label>
+                                <button onclick="if(appState.currentIndex<39){appState.currentIndex++;render();}else confirmSubmit();" class="w-full sm:w-auto bg-slate-900 text-white px-7 py-3 rounded-xl text-sm font-bold hover:bg-slate-800">${appState.currentIndex===39?'Selesai & Kumpulkan':'Soal Selanjutnya →'}</button>
+                            </div>
+                        </section>
+                    </div>
+                </main>
+            `;
+        }
+
+        function confirmSubmit() {
+            const empty = 40 - Object.keys(appState.answers).length;
+            let msg = empty > 0 
+                ? `Peringatan: Terdapat <strong class="text-rose-600">${empty} soal</strong> yang dibiarkan kosong. Soal kosong bernilai salah (0). Yakin ingin mengakhiri sesi sekarang?`
+                : "Anda telah menyelesaikan seluruh butir soal. Apakah Anda yakin ingin mengunci jawaban dan melihat hasil evaluasi?";
+
+            showModal('warning', 'Konfirmasi Akhiri Ujian', msg, [
+                { text: 'Periksa Ulang', classNames: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50' },
+                { text: 'Kunci & Proses Nilai', classNames: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md', onClick: processSubmission }
+            ]);
+        }
+
+        function processSubmission() {
+            if (appState.timerInterval) clearInterval(appState.timerInterval);
+            let correct = 0;
+            appState.questions.forEach((q, i) => {
+                if (appState.answers[i] === q.c) correct++;
+            });
+            // Total score scale 100 (40 * 2.5)
+            const score = (correct * 2.5).toFixed(1); 
+            // Convert to int if no decimal
+            const finalScore = score % 1 === 0 ? parseInt(score) : parseFloat(score);
+
+            appState.scoreData = { score: finalScore, correct, wrong: Object.keys(appState.answers).filter(i => appState.answers[i] !== appState.questions[i].c).length, blank: 40 - Object.keys(appState.answers).length, passed: finalScore >= examData.passingScore };
+            appState.currentScreen = 'result';
+            render();
+            window.scrollTo(0, 0);
+        }
+
+        // --- PAGE 4: RESULT SCREEN ---
+        function renderResult() {
+            const data = appState.scoreData;
+            
+            let conditionalContent = '';
+            if (data.passed) {
+                // LOGIKA LULUS: TAMPILKAN FULL PEMBAHASAN
+                let list = appState.questions.map((q, idx) => {
+                    const ans = appState.answers[idx];
+                    const isCorrect = ans === q.c;
+                    return `
+                        <div class="bg-white rounded-[2rem] p-6 sm:p-10 border border-slate-200 shadow-sm mb-8 break-inside-avoid">
+                            <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-5">
+                                <span class="font-black text-slate-800 text-sm bg-slate-100 px-4 py-2 rounded-lg tracking-widest">KASUS NO. ${idx + 1}</span>
+                                <span class="text-[10px] sm:text-xs font-black px-4 py-2 rounded-lg uppercase tracking-widest border ${ans===undefined ? 'bg-slate-50 text-slate-500 border-slate-200' : (isCorrect ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200')}">
+                                    ${ans===undefined ? 'KOSONG (0 Poin)' : (isCorrect ? 'BENAR (2.5 Poin)' : 'SALAH (0 Poin)')}
+                                </span>
+                            </div>
+                            <p class="font-medium text-slate-800 mb-8 text-sm sm:text-base leading-relaxed text-justify">${q.q}</p>
+                            
+                            <div class="space-y-3 mb-8">
+                                ${q.o.map((opt, oIdx) => {
+                                    let style = "bg-white border-2 border-slate-100 text-slate-500";
+                                    let badge = "";
+                                    if(oIdx === q.c) { style = "bg-emerald-50/50 border-2 border-emerald-400 text-emerald-900 font-bold shadow-sm"; badge = "KUNCI JAWABAN"; } 
+                                    else if(oIdx === ans) { style = "bg-rose-50/50 border-2 border-rose-300 text-rose-900 font-bold"; badge = "PILIHAN ANDA"; }
+                                    
+                                    return `
+                                        <div class="p-4 sm:p-5 rounded-xl text-sm sm:text-base flex justify-between items-center transition ${style}">
+                                            <div class="flex-1 leading-relaxed"><span class="mr-3 opacity-40 font-black tracking-wider">${String.fromCharCode(65+oIdx)}.</span> ${opt}</div>
+                                            ${badge ? `<span class="text-[9px] font-black px-2.5 py-1.5 rounded shadow-sm text-white ${oIdx===q.c ? 'bg-emerald-500' : 'bg-rose-500'} uppercase tracking-widest shrink-0 ml-3">${badge}</span>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+
+                            <div class="bg-indigo-50/70 border border-indigo-100 p-6 sm:p-8 rounded-2xl text-sm text-indigo-900 relative overflow-hidden">
+                                <div class="absolute left-0 top-0 w-1.5 h-full bg-indigo-500"></div>
+                                <span class="flex items-center gap-2 font-black mb-3 uppercase text-xs tracking-widest text-indigo-700">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Analisis Manajerial & Pembahasan
+                                </span> 
+                                <p class="leading-loose font-medium opacity-90 text-justify">${q.e}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                conditionalContent = `
+                    <div class="mt-16 max-w-5xl mx-auto fade-in">
+                        <div class="text-center mb-10">
+                            <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Eksplorasi Pembahasan</h3>
+                            <p class="text-slate-500 text-sm mt-2 font-medium">Tinjauan analitik atas 40 studi kasus untuk mempertajam intuisi manajerial Anda.</p>
+                        </div>
+                        ${list}
+                    </div>
+                `;
+            } else {
+                // REMEDIAL MAKSIMAL 2 KALI
+                const remainingRemedial = appState.maxAttempts - appState.attempt;
+                conditionalContent = `
+                    <div class="bg-rose-50 border-2 border-rose-200 rounded-[2.5rem] p-8 sm:p-14 text-center mt-12 shadow-lg max-w-2xl mx-auto fade-in">
+                        <h3 class="font-black text-rose-900 text-3xl mb-4">${remainingRemedial>0?'REMEDIAL':'TIDAK LULUS'}</h3>
+                        <p class="text-rose-800 text-base mb-8 max-w-lg mx-auto leading-relaxed font-medium">
+                            Nilai Anda belum mencapai batas kelulusan 72,5.
+                            ${remainingRemedial>0?`Masih tersedia <strong>${remainingRemedial} kesempatan remedial</strong>.`:'<strong>Kesempatan remedial telah habis.</strong>'}
+                        </p>
+                        ${remainingRemedial>0?`<button onclick="startExam(true)" class="bg-rose-600 hover:bg-rose-700 text-white font-black py-4 px-12 rounded-2xl shadow-xl uppercase tracking-widest text-sm">Mulai Remedial</button>`:''}
+                    </div>
+                `;
+            }
+
+            return `
+                <header class="bg-slate-900 text-white px-4 py-5 border-b border-slate-800">
+                    <div class="max-w-[1200px] mx-auto flex justify-between items-center">
+                        <span class="text-xs font-black uppercase tracking-widest opacity-60">Laporan Akhir</span>
+                        <button onclick="appState.currentScreen='login'; render();" class="text-[10px] sm:text-xs font-bold uppercase tracking-widest bg-white/10 hover:bg-white/20 px-5 py-2.5 rounded-xl transition">Keluar Sistem</button>
+                    </div>
+                </header>
+
+                <main class="flex-1 w-full max-w-[1200px] mx-auto px-4 py-12 sm:py-16 fade-in">
+                    <div class="bg-white rounded-[3rem] p-10 sm:p-16 text-center border border-slate-200 shadow-2xl shadow-slate-200/50 max-w-4xl mx-auto relative overflow-hidden">
+                        ${data.passed ? '<div class="absolute top-0 right-0 p-8 text-emerald-400 opacity-20"><svg class="w-48 h-48" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg></div>' : ''}
+                        
+                        <div class="mb-5 relative z-10">
+                            <span class="inline-block bg-slate-100 text-slate-500 font-black text-[10px] px-4 py-1.5 rounded-md uppercase tracking-widest border border-slate-200">
+                                Bukti Kelulusan PPPK
+                            </span>
+                        </div>
+                        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 mb-3 tracking-tight relative z-10">${appState.name}</h1>
+                        <p class="font-mono text-slate-500 text-sm font-bold mb-10 bg-slate-50 inline-block px-4 py-1.5 border border-slate-100 rounded relative z-10">${appState.nip}</p>
+
+                        <div class="relative inline-block mb-10 z-10">
+                            <div class="text-[6rem] sm:text-[9rem] leading-none font-black ${data.passed ? 'text-emerald-500' : 'text-rose-500'} tracking-tighter drop-shadow-sm">
+                                ${data.score}
+                            </div>
+                            <div class="text-slate-400 font-black text-xs sm:text-sm tracking-[0.4em] uppercase mt-6">Skor Evaluasi (0-100)</div>
+                        </div>
+                        
+                        <div class="flex justify-center mb-12 relative z-10">
+                            <div class="inline-block px-10 py-3 rounded-xl font-black text-sm uppercase tracking-[0.2em] border-2 shadow-sm ${data.passed ? 'bg-emerald-50 border-emerald-400 text-emerald-700' : 'bg-rose-50 border-rose-400 text-rose-700'}">
+                                ${data.passed ? 'LULUS (MEMENUHI AMBANG BATAS)' : 'TIDAK LULUS (GAGAL)'}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto relative z-10">
+                            <div class="bg-white border-2 border-slate-100 px-6 py-5 rounded-2xl shadow-sm">
+                                <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Jawaban Benar</p>
+                                <p class="text-3xl font-black text-emerald-500">${data.correct}</p>
+                            </div>
+                            <div class="bg-white border-2 border-slate-100 px-6 py-5 rounded-2xl shadow-sm">
+                                <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Jawaban Salah</p>
+                                <p class="text-3xl font-black text-rose-500">${data.wrong}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${conditionalContent}
+                </main>
+            `;
+        }
+
+        window.onload = render;
+    </script>
+</body>
+</html>
